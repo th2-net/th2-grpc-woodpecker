@@ -1,0 +1,251 @@
+buildscript {
+    repositories {
+        mavenCentral()
+
+        maven {
+            url 'https://dl.bintray.com/exactpro/th2'
+        }
+
+        maven {
+            url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+        }
+
+        maven {
+            url 'https://s01.oss.sonatype.org/content/repositories/releases/'
+        }
+
+        mavenLocal()
+    }
+
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.13'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+    id 'com.google.protobuf' version '0.8.15'
+    id 'io.github.gradle-nexus.publish-plugin' version '1.0.0'
+}
+
+group = 'com.exactpro.th2'
+version = release_version
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+ext {
+    grpcVersion = '1.32.1'
+    reactiveGrpcVersion = '1.0.1'
+    protobufVersion = '3.13.0'
+    serviceGeneratorVersion = '3.1.5'
+
+    genDir = file("${project.rootDir}/src/gen")
+    sharedDir = file("${project.rootDir}/shared")
+}
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url 'https://dl.bintray.com/exactpro/th2'
+    }
+
+    maven {
+        url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+    }
+
+    maven {
+        url 'https://s01.oss.sonatype.org/content/repositories/releases/'
+    }
+
+    mavenLocal()
+
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+        resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+    }
+}
+
+dependencies {
+    api platform('com.exactpro.th2:bom:2.10.2')
+
+    api 'com.exactpro.th2:grpc-common:3.1.1'
+
+    api 'com.google.protobuf:protobuf-java-util'
+    api 'io.grpc:grpc-stub'
+    implementation 'io.grpc:grpc-protobuf'
+    implementation 'io.grpc:grpc-core'
+    implementation 'io.grpc:grpc-netty'
+
+    api "com.salesforce.servicelibs:rxgrpc-stub:${reactiveGrpcVersion}"
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.19'
+
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
+
+    api "com.exactpro.th2:grpc-service-generator:${serviceGeneratorVersion}"
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDirs 'src/main/proto'
+        }
+
+        java {
+            srcDirs 'src/gen/main/java', 'src/gen/main/grpc', 'src/gen/main/rxgrpc', 'src/gen/main/services/java/src'
+        }
+
+        resources {
+            srcDirs 'src/gen/main/services/java/resources'
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
+    }
+
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+
+        rxgrpc {
+            artifact = "com.salesforce.servicelibs:rxgrpc:${reactiveGrpcVersion}"
+        }
+
+        services {
+            artifact = "com.exactpro.th2:grpc-service-generator:${serviceGeneratorVersion}:all@jar"
+        }
+    }
+
+    generateProtoTasks.generatedFilesBaseDir = genDir
+
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+            rxgrpc {}
+
+            services {
+                option 'javaInterfacesPath=./java/src'
+                option 'javaInterfacesImplPath=./java/src'
+                option 'javaMetaInfPath=./java/resources'
+                option 'pythonPath=./python'
+            }
+        }
+
+        ofSourceSet('main')
+    }
+}
+
+compileJava.dependsOn.add('generateProto')
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+// conditionals for publications
+tasks.withType(PublishToMavenRepository) {
+    onlyIf {
+        (repository == publishing.repositories.nexusRepository &&
+                project.hasProperty('nexus_user') &&
+                project.hasProperty('nexus_password') &&
+                project.hasProperty('nexus_url')) ||
+                (repository == publishing.repositories.sonatype &&
+                        project.hasProperty('sonatypeUsername') &&
+                        project.hasProperty('sonatypePassword')) ||
+                (repository == publishing.repositories.localRepo)
+    }
+}
+tasks.withType(Sign) {
+    onlyIf {
+        project.hasProperty('signingKey') && project.hasProperty('signingPassword')
+    }
+}
+
+// disable running task 'initializeSonatypeStagingRepository' on a gitlab
+tasks.whenTaskAdded { task ->
+    if (task.name == 'initializeSonatypeStagingRepository' &&
+            !(project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword'))
+    ) {
+        task.enabled = false
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            pom {
+                name = rootProject.name
+                packaging = 'jar'
+                description = rootProject.description
+                url = vcs_url
+
+                scm {
+                    url = vcs_url
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'developer'
+                        name = 'developer'
+                        email = 'developer@exactpro.com'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'localRepo'
+            url = sharedDir
+        }
+
+        //Nexus repo to publish from gitlab
+        maven {
+            name = 'nexusRepository'
+            url = project.findProperty('nexus_url')
+
+            credentials {
+                username = project.findProperty('nexus_user')
+                password = project.findProperty('nexus_password')
+            }
+        }
+    }
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri('https://s01.oss.sonatype.org/service/local/'))
+            snapshotRepositoryUrl.set(uri('https://s01.oss.sonatype.org/content/repositories/snapshots/'))
+        }
+    }
+}
+
+signing {
+    def signingKey = findProperty("signingKey")
+    def signingPassword = findProperty("signingPassword")
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.mavenJava
+}
+
+clean {
+    delete genDir
+}
