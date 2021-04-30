@@ -1,7 +1,7 @@
-# th2 Woodpecker gRPC library (0.0.1)
+# th2 pkr (woodpecker) gRPC library (0.0.1)
 
-This library contains proto messages and `Woodpecker` service with RPC methods that are used in [th2 Woodpecker](https://github.com/th2-net/th2-woodpecker "th2-woodpecker").
-See [woodpecker.proto](src/main/proto/th2_grpc_woodpecker/woodpecker.proto "woodpecker.proto") file for details. <br>
+This library contains proto messages and `Pkr` service with RPC methods that are used in [th2 prk](https://github.com/th2-net/th2-prk "th2-prk").
+See [prk.proto](src/main/proto/th2_grpc_pkr/pkr.proto "prk.proto") file for details. <br>
 Tool generates code from `.proto` files and uploads built packages (`.proto` files and generated code) to specified repositories.
 
 ## How to maintain project

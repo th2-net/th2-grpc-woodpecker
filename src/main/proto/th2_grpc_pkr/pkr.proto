@@ -16,12 +16,12 @@
 
 syntax = "proto3";
 
-package woodpecker;
+package pkr;
 
 option java_multiple_files = true;
-option java_package = "com.exactpro.th2.woodpecker.grpc";
+option java_package = "com.exactpro.th2.pkr.grpc";
 
-service Woodpecker {
+service Pkr {
   rpc start (StartRequest) returns (Response); // starts a load with a constant rate for indefinite amount of time
   rpc schedule (ScheduleRequest) returns (Response); // starts a load with variable rate for a certain amount of time
   rpc stop (StopRequest) returns (Response); // stops current load
