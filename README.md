@@ -46,3 +46,9 @@ If you wish to manually create and publish package for Python:
     twine upload --repository-url ${PYPI_REPOSITORY_URL} --username ${PYPI_USER} --password ${PYPI_PASSWORD} dist/*
     ```
    `PYPI_REPOSITORY_URL`, `PYPI_USER` and `PYPI_PASSWORD` are parameters for publishing.
+
+# Release notes
+
+## 0.4.0
++ th2-bom upgrade to `4.1.0`
++ grcp upgraded to `1.50.2`
