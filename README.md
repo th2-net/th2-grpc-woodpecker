@@ -57,8 +57,8 @@ If you wish to manually create and publish package for Python:
 + Updated th2 grpc common to version to 4.2.0-dev
 + Updated service generator version to 3.3.1
 + Updated protobuf version to 3.21.7
-+ Updated rx grpc version to 1.2.3
-+ Updated rx java version to 2.2.21
+
++ Removed rx grpc plugin
 
 + Downgraded grpc version to 1.48.1
 
