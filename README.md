@@ -1,4 +1,4 @@
-# th2 Woodpecker gRPC library (0.3.0)
+# th2 Woodpecker gRPC library (2.0.0)
 
 This library contains proto messages and `Woodpecker` service with RPC methods that are used in [th2 Woodpecker](https://github.com/th2-net/th2-woodpecker "th2-woodpecker").
 See [woodpecker.proto](src/main/proto/th2_grpc_woodpecker/woodpecker.proto "woodpecker.proto") file for details. <br>
@@ -48,6 +48,19 @@ If you wish to manually create and publish package for Python:
    `PYPI_REPOSITORY_URL`, `PYPI_USER` and `PYPI_PASSWORD` are parameters for publishing.
 
 # Release notes
+
+## 2.0.0
++ Migrated to book & page concept
++ Configured owasp plugin for vulnerability check
+
++ Updated th2 bom version to 4.2.0
++ Updated th2 grpc common to version to 4.2.0-dev
++ Updated service generator version to 3.3.1
++ Updated protobuf version to 3.21.7
++ Updated rx grpc version to 1.2.3
++ Updated rx java version to 2.2.21
+
++ Downgraded grpc version to 1.48.1
 
 ## 0.4.0
 + th2-bom upgrade to `4.1.0`
